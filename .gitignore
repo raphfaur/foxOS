@@ -1,0 +1,7 @@
+*.o
+obj
+builds
+.vscode
+*.bin
+*.dtb
+.gdbinit
