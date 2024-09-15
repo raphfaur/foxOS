@@ -7,6 +7,7 @@
 #include "./utils/debug.h"
 #include "./drivers/smmu/mmu.h"
 #include "./memory/allocator.h"
+#include "api/syscall.h"
 
 extern struct Scheduler scheduler;
 extern char _t1_stack;
@@ -56,19 +57,31 @@ struct Task T2 = {.pstate = 0,
 extern char _user_space_base;
 void _main(void) {
 
-  DEBUG("Initializing allocator");
-  init_allocator();
-  for (size_t i = 0; i < 16; i++)
-  {
-    alloc(0);
-  }
+  struct gic_distributor gicd;
+  struct gic_redistributor gicr;
+  struct gic_cpu gicc;
+
+  gic_distributor_init(&gicd);
+  gic_redistributor_init(&gicr);
+  gic_cpu_init(&gicc);
+
+  DEBUG("Config done");
+
+  syscall(2);
+
+  // DEBUG("Initializing allocator");
+  // init_allocator();
+  // for (size_t i = 0; i < 16; i++)
+  // {
+  //   alloc(0);
+  // }
   
 
-  //__init(&scheduler);
+  __init(&scheduler);
 
-  //register_task(&T1);
-  //register_task(&T2);
-  //__start(&scheduler);
+  register_task(&T1);
+  register_task(&T2);
+  __start(&scheduler);
 
   while (1) {
     // unsigned int waker = ((uint32_t)current_system_timer_value());
