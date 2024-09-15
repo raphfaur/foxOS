@@ -7,6 +7,8 @@ void gic_cpu_init(struct gic_cpu* dev);
 uint32_t get_ICC_SRE_EL1();
 uint32_t get_ICC_IGRPEN1_EL1();
 
+int get_intid_mode_0();
+
 
 struct gic_distributor {
   void * base_address;
@@ -27,6 +29,7 @@ uint32_t get_periphbase();
 
 void try(struct gic_distributor *dev);
 uint32_t clear_gicc_interrupt();
+void clear_gicc_interrupt_id(uint32_t intid);
 
 // Routing
 uint64_t read_SCR_EL3();

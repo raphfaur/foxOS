@@ -30,6 +30,12 @@ $(OBJ)/%.o : drivers/mmu/%.c
 $(OBJ)/%.o : scheduling/%.c
 	$(CC) $(CCFLAGS) -o $@ $^
 
+$(OBJ)/%.o : isr/%.c
+	$(CC) $(CCFLAGS) -o $@ $^
+
+$(OBJ)/%.o : api/%.c
+	$(CC) $(CCFLAGS) -o $@ $^
+
 $(OBJ)/%.o : utils/debug.c
 	$(CC) $(CCFLAGS) -o $@ $^
 
@@ -45,7 +51,7 @@ $(OBJ)/context_switcher.o : asm/context_switcher.s
 $(OBJ)/exceptions.o : asm/exceptions.s
 	$(AS) $(ASFLAGS) -o $@ $^
 
-builds/main.elf : linker.ld $(OBJ)/cpu.o $(OBJ)/mmu.o $(OBJ)/allocator.o $(OBJ)/context_switcher.o $(OBJ)/core.o $(OBJ)/debug.o $(OBJ)/scheduler.o $(OBJ)/timer.o $(OBJ)/pl001.o $(OBJ)/main.o $(OBJ)/startup.o $(OBJ)/exceptions.o
+builds/main.elf : linker.ld $(OBJ)/cpu.o $(OBJ)/mmu.o $(OBJ)/syscall.o $(OBJ)/handler.o $(OBJ)/allocator.o $(OBJ)/context_switcher.o $(OBJ)/core.o $(OBJ)/debug.o $(OBJ)/scheduler.o $(OBJ)/timer.o $(OBJ)/pl001.o $(OBJ)/main.o $(OBJ)/startup.o $(OBJ)/exceptions.o
 	$(CC) -specs=nosys.specs -T  $^ -o $@ -nostartfiles -lm -L /Applications/ArmGNUToolchain/13.3.rel1/aarch64-none-elf/lib/gcc/aarch64-none-elf/13.3.1 
 
 main.bin : builds/main.elf

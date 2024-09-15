@@ -130,6 +130,10 @@ void unset_daif_f() {
   __asm volatile ("msr daif, %[value]" : : [value] "r"(daif));
 }
 
+void clear_gicc_interrupt_id(uint32_t intid) {
+    __asm volatile ("msr ICC_EOIR0_EL1, %[value]" : : [value] "r"((uint64_t) intid));
+}
+
 uint32_t clear_gicc_interrupt() {
   uint32_t intid;
   __asm volatile("mrs %[systemr], ICC_IAR0_EL1" : [systemr] "=r"(intid) :);
@@ -261,7 +265,11 @@ void set_mode_for_intid(struct gic_redistributor *dev, int intid) {
   DEBUGB(*address_GICR_ICFGR1)
 }
 
-
+int get_intid_mode_0() {
+  uint64_t value;
+  __asm volatile("mrs %[systemr], ICC_IAR0_EL1" : [systemr] "=r"(value) :);
+  return (int) value;
+}
 void gic_redistributor_init(struct gic_redistributor* dev) {
   DEBUG("Beginning GIC Redistributor configuration")
   dev->base_address = (void *) REDISTRIBUTOR_BASE_ADDRESS;
@@ -269,8 +277,13 @@ void gic_redistributor_init(struct gic_redistributor* dev) {
   poll_ChildrenAsleep(dev);
   DEBUG("Setting group for intid 30")
   DEBUG("Enabling intid 30")
+  // Enable TIMER interrupts
   set_mode_for_intid(dev, 30);
   enable_intid_r(dev, 30);
+  // Enable SGI 1
+  set_mode_for_intid(dev, 0);
+  enable_intid_r(dev, 0);
+
   DEBUG("\n")
 }
 

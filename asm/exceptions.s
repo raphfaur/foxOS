@@ -1,7 +1,9 @@
 .section .text.exceptions
 .extern __exception_gateway
 
+.global __fiq_bridge
 .global _switcher_entry
+.global _smc_entry
 .global exception_vector_table
 
 exception_vector_table:
@@ -18,7 +20,8 @@ exception_vector_table:
 
 
 .org 0x0200
-
+    smc_handler:
+        B _smc_entry
 
 .org 0x0280
 
