@@ -1,27 +1,36 @@
+MMU_CMDQ_SIZE = 0x200;
+MMU_EVTQ_SIZE = 0x200;
+
 ENTRY(_Startup)
 SECTIONS {
   . = 0x40000000;
   .startup . : {
-    startup.o(.text)
+    obj/startup.o(.text)
   }
-
   . = ALIGN(0x100);
   _vbar_address = .;
-  .text.exceptions : { exceptions.o(.text.exceptions) }
-
+  .text.exceptions : { obj/exceptions.o(.text.exceptions) }
   .text : {
     *(.text)
-    context_switcher.o(.text.context_switcher)
+    obj/context_switcher.o(.text.context_switcher)
   }
   .data : {
     *(.data)
   }
   .bdd : {
     *(.bss COMMON)
-  }
-  
+  } 
+    . = ALIGN(0x200);
+  _lvl2_tbl = .;
+  . = . + 0x200;
+  . = ALIGN(0x10000);
+  _lvl3_tbl = .;
+  . = . + 0x400000;
   . = ALIGN(8);
-  . = . + 0x40000;
+  _heap_start = .;
+  . = . + 0x4000;
+  end = _heap_start;
+  . = . + 0x200;
   _stack_top = .;
   . = . + 0x40000;
   _t1_stack = .;
@@ -30,8 +39,6 @@ SECTIONS {
   . = . + 0x40000;
   _heap_start1 = .;
   . = . + 0x40000;
-  _heap_start2 = .;
-  . = . + 0x40000;
-  _heap_start3 = .;
+  _user_space_base = .;
 }
 

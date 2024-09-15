@@ -1,7 +1,6 @@
 #include "cpu.h"
 #include <stdint.h>
-#include "../../debug.h"
-#include "math.h"
+#include "../../utils/debug.h"
 
 extern char _vbar_address;
 #define REDISTRIBUTOR_BASE_ADDRESS 0x80a0000

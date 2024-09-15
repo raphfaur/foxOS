@@ -1,7 +1,7 @@
 #include "./scheduler.h"
 #include "../drivers/timer/timer.h"
 #include "../drivers/gic/cpu.h"
-#include "../debug.h"
+#include "../utils/debug.h"
 #include "./tasks.h"
 #include "string.h"
 

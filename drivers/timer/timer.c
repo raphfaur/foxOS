@@ -1,6 +1,5 @@
 #include "./timer.h"
 #include <stdint.h>
-#include "../../debug.h"
 
 void set_current_system_timer_value(unsigned int timer) {
   uint64_t value;

@@ -18,30 +18,36 @@ $(OBJ)/%.o : drivers/timer/%.c
 $(OBJ)/%.o : drivers/uart/%.c
 	$(CC) $(CCFLAGS) -o $@ $^
 
+$(OBJ)/%.o : memory/%.c
+	$(CC) $(CCFLAGS) -o $@ $^
+
 $(OBJ)/%.o : multicore/%.c
+	$(CC) $(CCFLAGS) -o $@ $^
+
+$(OBJ)/%.o : drivers/mmu/%.c
 	$(CC) $(CCFLAGS) -o $@ $^
 
 $(OBJ)/%.o : scheduling/%.c
 	$(CC) $(CCFLAGS) -o $@ $^
 
-$(OBJ)/%.o : debug.c
+$(OBJ)/%.o : utils/debug.c
 	$(CC) $(CCFLAGS) -o $@ $^
 
 $(OBJ)/main.o : main.c 
 	$(CC) $(CCFLAGS) -o $@ $^
 
-startup.o : startup.s
-	$(AS) $(ASFLAGS) startup.s -o startup.o
+$(OBJ)/startup.o : asm/startup.s
+	$(AS) $(ASFLAGS) -o $@ $^
 
-context_switcher.o : context_switcher.s
-	$(AS) $(ASFLAGS) context_switcher.s -o context_switcher.o
+$(OBJ)/context_switcher.o : asm/context_switcher.s
+	$(AS) $(ASFLAGS) -o $@ $^
 
-exceptions.o : exceptions.s
-	$(AS) $(ASFLAGS) exceptions.s -o exceptions.o
+$(OBJ)/exceptions.o : asm/exceptions.s
+	$(AS) $(ASFLAGS) -o $@ $^
 
-main.elf : linker.ld $(OBJ)/cpu.o  context_switcher.o $(OBJ)/core.o $(OBJ)/debug.o $(OBJ)/scheduler.o $(OBJ)/timer.o $(OBJ)/pl001.o $(OBJ)/main.o startup.o exceptions.o
-	$(CC) -specs=nosys.specs -T  $^ -o $@ -nostartfiles 
+builds/main.elf : linker.ld $(OBJ)/cpu.o $(OBJ)/mmu.o $(OBJ)/allocator.o $(OBJ)/context_switcher.o $(OBJ)/core.o $(OBJ)/debug.o $(OBJ)/scheduler.o $(OBJ)/timer.o $(OBJ)/pl001.o $(OBJ)/main.o $(OBJ)/startup.o $(OBJ)/exceptions.o
+	$(CC) -specs=nosys.specs -T  $^ -o $@ -nostartfiles -lm -L /Applications/ArmGNUToolchain/13.3.rel1/aarch64-none-elf/lib/gcc/aarch64-none-elf/13.3.1 
 
-main.bin : main.elf
-	$(OBJCPY) -O binary main.elf main.bin
+main.bin : builds/main.elf
+	$(OBJCPY) -O binary builds/main.elf builds/main.bin
 
