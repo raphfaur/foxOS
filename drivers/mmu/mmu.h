@@ -37,6 +37,13 @@ union TCR_EL1 {
   } field;
 };
 
+/*
+----------------
+Block attributes
+----------------
+*/
+
+// Low attributes
 struct __attribute__((packed)) mmu_l_attr {
   uint8_t INDX : 3;
   uint8_t NS : 1;
@@ -45,6 +52,7 @@ struct __attribute__((packed)) mmu_l_attr {
   uint8_t AF : 1;
 };
 
+// High attributes
 struct __attribute__((packed)) mmu_h_attr {
   uint8_t RESERVED : 1 - 0;
   uint8_t PXN : 2 - 1;
@@ -53,7 +61,15 @@ struct __attribute__((packed)) mmu_h_attr {
   uint8_t RESERVED : 12 - 7;
 };
 
-struct __attribute__((packed)) mmu_table_tte {
+
+/* 
+--------------
+Table entries 
+--------------
+*/
+
+// 64Kb granularity entry
+struct __attribute__((packed)) mmu_table_tte_64k {
   uint8_t type : 2 - 0 ;
   uint16_t RESERVED : 16 - 2;
   uint64_t addresss : 48 - 16;
@@ -64,32 +80,138 @@ struct __attribute__((packed)) mmu_table_tte {
   uint8_t NS : 64 - 63;
 };
 
-struct __attribute__((packed)) mmu_block_tte {
+// 4Kb granularity entry
+struct __attribute__((packed)) mmu_table_tte_4k {
   uint8_t type : 2 - 0 ;
-  uint8_t INDX : 3;
-  uint8_t NS : 1;
-  uint8_t AP : 2;
-  uint8_t SH : 2;
-  uint8_t AF : 1;
-  uint32_t RESERVED : 17 - 12;
-  uint64_t addresss : 48 - 17;
-  uint16_t RESERVED : 52 - 48;
-  uint8_t RESERVED : 1 - 0;
-  uint8_t PXN : 2 - 1;
-  uint8_t UXN : 3 - 2;
-  uint8_t __soft : 7 - 3;
-  uint8_t RESERVED : 12 - 7;
+  uint16_t RESERVED : 12 - 2;
+  uint64_t addresss : 48 - 12;
+  uint16_t RESERVED : 59 - 48;
+  uint8_t PXN : 60 - 59;
+  uint8_t XN : 61 - 60;
+  uint8_t AP : 63 - 61;
+  uint8_t NS : 64 - 63;
 };
 
+
+/*
+-------------
+Block entries
+-------------
+*/
+
+// 64k granularity
+struct __attribute__((packed)) mmu_block_tte_64k_lv2 {
+  uint8_t type : 2 - 0 ;
+  struct mmu_l_attr l_attr;
+  uint32_t RESERVED : 29 - 12;
+  uint64_t addresss : 48 - 29;
+  uint16_t RESERVED : 52 - 48;
+  struct mmu_h_attr h_attr;
+};
+
+struct __attribute__((packed)) mmu_block_tte_64k_lv3 {
+  uint8_t type : 2 - 0 ;
+  struct mmu_l_attr l_attr;
+  uint32_t RESERVED : 16 - 12;
+  uint64_t addresss : 48 - 16;
+  uint16_t RESERVED : 52 - 48;
+  struct mmu_h_attr h_attr;
+};
+
+// 4k granularity
+struct __attribute__((packed)) mmu_block_tte_4k_lv1 {
+  uint8_t type : 2 - 0 ;
+  struct mmu_l_attr l_attr;
+  uint32_t RESERVED : 30 - 12;
+  uint64_t addresss : 48 - 30;
+  uint16_t RESERVED : 52 - 48;
+  struct mmu_h_attr h_attr;
+};
+
+struct __attribute__((packed)) mmu_block_tte_4k_lv2 {
+  uint8_t type : 2 - 0 ;
+  struct mmu_l_attr l_attr;
+  uint32_t RESERVED : 21 - 12;
+  uint64_t addresss : 48 - 21;
+  uint16_t RESERVED : 52 - 48;
+  struct mmu_h_attr h_attr;
+};
+
+struct __attribute__((packed)) mmu_block_tte_4k_lv3 {
+  uint8_t type : 2 - 0 ;
+  struct mmu_l_attr l_attr;
+  uint64_t addresss : 48 - 12;
+  uint16_t RESERVED : 52 - 48;
+  struct mmu_h_attr h_attr;
+};
+
+
+/*
+-------------
+Invalid entry
+-------------
+*/
 struct __attribute__((packed)) mmu_invalid_tte {
   uint8_t type : 1 - 0;
   uint64_t RESERVED : 64 - 1;
 };
 
-union mmu_tte {
-  struct mmu_table_tte table;
-  struct mmu_block_tte block;
+
+/*
+-----------------------
+Translation table entry
+-----------------------
+*/
+
+// 4k granularity 
+
+// lv1 - Block or Table
+union mmu_tte_4k_lv1 {
+  struct mmu_block_tte_4k_lv1 block;
+  struct mmu_table_tte_4k table;
   struct mmu_invalid_tte invalid;
+  uint64_t raw;
 };
+
+// lv2 - Block or Table
+union mmu_tte_4k_lv2 {
+  struct mmu_block_tte_4k_lv2 block;
+  struct mmu_table_tte_4k table;
+  struct mmu_invalid_tte invalid;
+  uint64_t raw;
+};
+
+// lv3 - Block
+union mmu_tte_4k_lv2 {
+  struct mmu_block_tte_4k_lv3 block;
+  struct mmu_invalid_tte invalid;
+  uint64_t raw;
+};
+
+
+// 64k granularity
+
+// lv1 - Table
+union mmu_tte_64k_lv1 {
+  struct mmu_table_tte_64k table;
+  struct mmu_invalid_tte invalid;
+  uint64_t raw;
+};
+
+// lv2 - Table or Block
+union mmu_tte_64k_lv2 {
+  struct mmu_block_tte_64k_lv2;
+  struct mmu_table_tte_64k table;
+  struct mmu_invalid_tte invalid;
+  uint64_t raw;
+};
+
+// lv3 - Block
+union mmu_tte_64k_lv3 {
+  struct mmu_block_tte_64k_lv3 block;
+  struct mmu_invalid_tte invalid;
+  uint64_t raw;
+};
+
 
 void mmu_set_tcr(union TCR_EL1 *tcr);

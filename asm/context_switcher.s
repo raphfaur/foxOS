@@ -49,7 +49,7 @@ _smc_entry:
         STP X26, X27, [SP, #-16]!
         STP X28, X29, [SP, #-16]!
         STR x30, [SP, #-16]!
-        BL __fiq_bridge
+        BL __synchronous_handler
         ldr x30, [sp], #16
         ldp x28, x29, [sp], #16
         ldp x26, x27, [sp], #16

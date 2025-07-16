@@ -7,6 +7,11 @@
 .global exception_vector_table
 
 exception_vector_table:
+
+/* 
+Exception from the current EL while using SP_EL0 
+*/
+
 .org 0x0000
 
 
@@ -19,19 +24,28 @@ exception_vector_table:
 .org 0x0180
 
 
+/*
+Exception from the current EL while using SP_ELx
+*/
+
+/* Synchronous */
 .org 0x0200
     smc_handler:
         B _smc_entry
 
 .org 0x0280
 
-
+/* FIQ */
 .org 0x0300
     timer_handler:
         B _switcher_entry
 
 .org 0x0380
 
+
+/*
+Exception from a lower EL and at least one lower EL is AArch64
+*/ 
 
 .org 0x0400
 

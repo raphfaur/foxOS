@@ -182,8 +182,12 @@ void _save_regs(uint64_t reg_base) {
         DEBUGH(regs[2*i])
         base_address += 1;
     }
-
-    memcpy(scheduler.regs, regs, sizeof(regs));
+    for (int i = 0; i < sizeof(regs) / sizeof(regs[0]); i++)
+    {
+        scheduler.regs[i] = regs[i];
+    }
+    
+    // memcpy(scheduler.regs, regs, 248);
 }
 
 void _schedule_next(unsigned int delay, uint64_t base_address) {
@@ -207,7 +211,7 @@ void _restore_return_address(uint64_t elr) {
 void __exception_gateway(uint64_t reg_base) {
 
     _save_regs(reg_base);
-    
+    DEBUG("Svaved regs")
     uint64_t pstate, elr;
     __asm("MRS %[pstate], SPSR_EL3" : [pstate]"=r"(pstate):);
     __asm("MRS %[pstate], ELR_EL3" : [pstate]"=r"(elr):);
@@ -239,5 +243,5 @@ void __exception_gateway(uint64_t reg_base) {
         }
         
     };
-    _schedule_next(5000000, reg_base);
+    _schedule_next(100000000, reg_base);
 }
