@@ -20,7 +20,7 @@ SECTIONS {
   .bdd : {
     *(.bss COMMON)
   } 
-    . = ALIGN(0x200);
+  . = ALIGN(0x10000);
   _lvl2_tbl = .;
   . = . + 0x200;
   . = ALIGN(0x10000);

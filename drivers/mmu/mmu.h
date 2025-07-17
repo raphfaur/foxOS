@@ -109,6 +109,7 @@ struct __attribute__((packed)) mmu_block_tte_64k_lv2 {
   uint8_t AP : 2;
   uint8_t SH : 2;
   uint8_t AF : 1;
+  uint8_t nG : 1;
   
   uint32_t RESERVED : 29 - 12;
   uint64_t addresss : 48 - 29;
@@ -131,6 +132,7 @@ struct __attribute__((packed)) mmu_block_tte_64k_lv3 {
   uint8_t AP : 2;
   uint8_t SH : 2;
   uint8_t AF : 1;
+  uint8_t nG : 1;
 
   uint32_t RESERVED : 16 - 12;
   uint64_t addresss : 48 - 16;
