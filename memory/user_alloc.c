@@ -1,0 +1,96 @@
+#include "./user_alloc.h"
+#include "./allocator.h"
+#include <math.h>
+#include "../utils/debug.h"
+
+struct process_block block_pool[BLOCK_N];
+struct process_block process_pool[MAX_PROCESS_MEMORY_SPACE_N];
+
+struct process_block* init_process_memory(int process_id) {
+    DEBUG("Initializing memory space for process : ");
+    DEBUGH(process_id);
+    struct process_block* process_memory_head;
+    process_memory_head =&process_pool[process_id];
+    process_memory_head->index = 0xff;
+    process_memory_head->process_id = process_id;
+    DEBUGH(process_memory_head->process_id);
+    process_memory_head->next_block = NULL;
+}
+
+void add_block_to_process(int process_id, int block_index) {
+    // Change block_pool[block_index]
+    block_pool[block_index].index = block_index;
+    DEBUGH(block_pool[block_index].index)
+    block_pool[block_index].process_id = process_id;
+    block_pool[block_index].next_block = NULL;
+    // Go through the linked list
+    struct process_block* head;
+    head = &process_pool[process_id];
+    while (head->next_block != NULL) {
+        head = head->next_block;
+    };
+    // Add the block to the end
+    head->next_block = &block_pool[block_index];
+}
+
+void delete_block_from_process(int process_id, int block_index) {
+    // Change block_pool[block_index]
+    DEBUGH(block_pool[block_index].index)
+    block_pool[block_index].process_id = MAX_PROCESS_MEMORY_SPACE_N;
+    // Go through the linked list
+    struct process_block* head;
+    head = &process_pool[process_id];
+    while (head->next_block != &block_pool[block_index]) {
+        head = head->next_block;
+    };
+    // Skip the deleted block
+    head->next_block = head->next_block->next_block;
+}
+
+void * process_alloc(int order, int process_id) {
+    void * space = alloc(order);
+    DEBUGH((uint64_t) space)
+    int index = ((uint64_t) space) / PAGE_SIZE;
+    DEBUGH(index);
+    DEBUGH(order);
+    int block_n = pow(2, order);
+    for (size_t i = 0; i < block_n; i++)
+    {
+        DEBUG("Adding block to process");
+        add_block_to_process(process_id, index + i);
+    }
+    return space;
+}
+
+void process_dealloc(void *address, int process_id) {
+    int order = free((void *) ( (uint64_t) address));
+    DEBUGH(order);
+    int index = ((uint64_t) address) / PAGE_SIZE;
+    int block_n = pow(2, order);
+    for (size_t i = 0; i < block_n; i++)
+    {
+        DEBUG("Removing block from process");
+        delete_block_from_process(process_id, index + i);
+    }
+}
+
+void set_process_mmu(int process_id) {
+    int i, j;
+    int mmu_block_index = 0;
+    struct process_block *head;
+    head = &process_pool[process_id];
+    while (head != NULL) {
+        head = head->next_block;
+    };
+    
+}
+
+void debug_process_memory(int process_id) {
+    struct process_block* head;
+    head = &process_pool[process_id];
+    while (head != NULL) {
+        DEBUGH(head->index);
+        DEBUGH(head->process_id);
+        head = head->next_block;
+    };
+}

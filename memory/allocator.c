@@ -14,7 +14,7 @@
 #define BLOCK_COUNT 31
 
 static block_t* allocated_blocks[MAX_BLOCK_INDEX];
-static void * allocated_address[MAX_BLOCK_INDEX];
+static struct address_w allocated_address[MAX_BLOCK_INDEX];
 static block_t blocks_pool[BLOCK_COUNT]; 
 
 static block_t root_block;
@@ -96,8 +96,9 @@ block_t * _allocate_order(block_t *block, int order) {
 int _save_address_block(void * address, block_t* block) {
     for (size_t i = 0; i < MAX_BLOCK_INDEX; i++)
     {
-        if (allocated_address[i] == NULL) {
-            allocated_address[i] = address;
+        if (allocated_address[i].valid == 0) {
+            allocated_address[i].address = address;
+            allocated_address[i].valid = 1;
             allocated_blocks[i] = block;
             return 0;
         }
@@ -108,8 +109,9 @@ int _save_address_block(void * address, block_t* block) {
 block_t * _erase_address_block(void * address) {
     for (size_t i = 0; i < MAX_BLOCK_INDEX; i++)
     {
-        if (allocated_address[i] == address) {
-            allocated_address[i] = NULL;
+        if (allocated_address[i].address == address && allocated_address[i].valid == 1) {
+            allocated_address[i].address = NULL;
+            allocated_address[i].valid = 0;
             block_t * block = allocated_blocks[i];
             allocated_blocks[i] = NULL;
             return block;
@@ -125,9 +127,8 @@ void * alloc(int order) {
         DEBUG("Could not allocate")
         return NULL;
     }
-    DEBUGD(allocated_block->index);
     int order_size = pow(2, order) * PAGE_SIZE;
-    void * address = (void *) (allocated_block->index * order_size + 0x10000000);
+    void * address = (void *) (allocated_block->index * order_size);
     DEBUGH((uint64_t)address);
     /* Error, unexcpected behavior */
     if(_save_address_block(address, allocated_block) < 0){
@@ -137,14 +138,16 @@ void * alloc(int order) {
     return address;
 }
 
-void free(void * address) {
+int free(void * address) {
     DEBUG("Erasing block")
     block_t * block = _erase_address_block(address);
+    DEBUGH(block->order);
     if (block != NULL)
     {
         DEBUG("Freeing block")
         _free_block(block);
     }
+    return block->order;
 }
 
 void populate_bt(block_t * block, int order, int index, block_t * parent) {

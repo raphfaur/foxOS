@@ -102,47 +102,73 @@ Block entries
 // 64k granularity
 struct __attribute__((packed)) mmu_block_tte_64k_lv2 {
   uint8_t type : 2 - 0 ;
-  struct mmu_l_attr l_attr;
+
+  // Low Attrs
+  uint8_t INDX : 3;
+  uint8_t NS : 1;
+  uint8_t AP : 2;
+  uint8_t SH : 2;
+  uint8_t AF : 1;
+  
   uint32_t RESERVED : 29 - 12;
   uint64_t addresss : 48 - 29;
   uint16_t RESERVED : 52 - 48;
-  struct mmu_h_attr h_attr;
+
+  // High Attrs
+  uint8_t RESERVED : 1 - 0;
+  uint8_t PXN : 2 - 1;
+  uint8_t UXN : 3 - 2;
+  uint8_t __soft : 7 - 3;
+  uint8_t RESERVED : 12 - 7;
 };
 
 struct __attribute__((packed)) mmu_block_tte_64k_lv3 {
   uint8_t type : 2 - 0 ;
-  struct mmu_l_attr l_attr;
+  
+  // Low Attrs
+  uint8_t INDX : 3;
+  uint8_t NS : 1;
+  uint8_t AP : 2;
+  uint8_t SH : 2;
+  uint8_t AF : 1;
+
   uint32_t RESERVED : 16 - 12;
   uint64_t addresss : 48 - 16;
   uint16_t RESERVED : 52 - 48;
-  struct mmu_h_attr h_attr;
+
+  // High Attrs
+  uint8_t RESERVED : 1 - 0;
+  uint8_t PXN : 2 - 1;
+  uint8_t UXN : 3 - 2;
+  uint8_t __soft : 7 - 3;
+  uint8_t RESERVED : 12 - 7;
 };
 
 // 4k granularity
 struct __attribute__((packed)) mmu_block_tte_4k_lv1 {
   uint8_t type : 2 - 0 ;
-  struct mmu_l_attr l_attr;
+  struct __attribute__((packed)) mmu_l_attr l_attr;
   uint32_t RESERVED : 30 - 12;
   uint64_t addresss : 48 - 30;
   uint16_t RESERVED : 52 - 48;
-  struct mmu_h_attr h_attr;
+  struct __attribute__((packed)) mmu_h_attr h_attr;
 };
 
 struct __attribute__((packed)) mmu_block_tte_4k_lv2 {
   uint8_t type : 2 - 0 ;
-  struct mmu_l_attr l_attr;
+  struct __attribute__((packed)) mmu_l_attr l_attr;
   uint32_t RESERVED : 21 - 12;
   uint64_t addresss : 48 - 21;
   uint16_t RESERVED : 52 - 48;
-  struct mmu_h_attr h_attr;
+  struct __attribute__((packed)) mmu_h_attr h_attr;
 };
 
 struct __attribute__((packed)) mmu_block_tte_4k_lv3 {
   uint8_t type : 2 - 0 ;
-  struct mmu_l_attr l_attr;
+  struct __attribute__((packed)) mmu_l_attr l_attr;
   uint64_t addresss : 48 - 12;
   uint16_t RESERVED : 52 - 48;
-  struct mmu_h_attr h_attr;
+  struct __attribute__((packed)) mmu_h_attr h_attr;
 };
 
 
@@ -182,7 +208,7 @@ union mmu_tte_4k_lv2 {
 };
 
 // lv3 - Block
-union mmu_tte_4k_lv2 {
+union mmu_tte_4k_lv3 {
   struct mmu_block_tte_4k_lv3 block;
   struct mmu_invalid_tte invalid;
   uint64_t raw;
@@ -200,7 +226,7 @@ union mmu_tte_64k_lv1 {
 
 // lv2 - Table or Block
 union mmu_tte_64k_lv2 {
-  struct mmu_block_tte_64k_lv2;
+  struct mmu_block_tte_64k_lv2 block;
   struct mmu_table_tte_64k table;
   struct mmu_invalid_tte invalid;
   uint64_t raw;

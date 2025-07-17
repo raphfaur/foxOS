@@ -5,7 +5,7 @@
 #define BT_DEPTH MAX_ORDER
 
 /* 64KB page size */
-#define PAGE_SIZE 64 * pow(2, 10)
+#define PAGE_SIZE (64 * pow(2, 10))
 
 struct block;
 
@@ -21,9 +21,14 @@ struct block {
     size_t index;
 };
 
+struct address_w {
+    void * address;
+    int valid;
+};
+
 typedef struct block block_t;
 
 void * alloc(int order);
-void free(void * address);
+int free(void * address);
 void init_allocator();
 

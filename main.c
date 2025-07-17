@@ -1,13 +1,14 @@
 #include "./drivers/gic/cpu.h"
+#include "./drivers/smmu/mmu.h"
 #include "./drivers/timer/timer.h"
+#include "./memory/allocator.h"
+#include "./memory/user_alloc.h"
+#include "./utils/debug.h"
+#include "api/syscall.h"
 #include "multicore/core.h"
 #include "scheduling/scheduler.h"
 #include "scheduling/tasks.h"
 #include <stdint.h>
-#include "./utils/debug.h"
-#include "./drivers/smmu/mmu.h"
-#include "./memory/allocator.h"
-#include "api/syscall.h"
 
 extern struct Scheduler scheduler;
 extern char _t1_stack;
@@ -16,30 +17,31 @@ extern char _t2_stack;
 void t1_start() {
   unsigned long long i = 0;
   int a = 0;
-  while (1) {
-    if (i == 10000) {
-      a++;
-      i = 0;
-      DEBUG("T1")
-      DEBUGD(a)
-    }
-    i++;
-  }
-  
+  uint64_t el;
+  // while (1) {
+  //   if (i == 10000) {
+  //     a++;
+  //     i = 0;
+  //     DEBUG("T1")
+  //     DEBUGD(a)
+  //   }
+  //   i++;
+  // }
 }
 
 void t2_start() {
   unsigned long long i = 0;
   int a = 0;
-  while (1) {
-    if (i == 10000) {
-      DEBUG("T2")
-      a++;
-      i = 0;
-      DEBUGD(a)
-    }
-    i++;
-  }
+  uint64_t el;
+  // while (1) {
+  //   if (i == 10000) {
+  //     DEBUG("T2")
+  //     a++;
+  //     i = 0;
+  //     DEBUGD(a)
+  //   }
+  //   i++;
+  // }
 }
 
 struct Task T1 = {.pstate = 0,
@@ -65,17 +67,14 @@ void _main(void) {
   gic_redistributor_init(&gicr);
   gic_cpu_init(&gicc);
 
-  DEBUG("Config done");
+  // DEBUG("Config done");
 
-  syscall(2);
+  // syscall(2);
 
-  // DEBUG("Initializing allocator");
-  // init_allocator();
-  // for (size_t i = 0; i < 16; i++)
-  // {
-  //   alloc(0);
-  // }
-  
+
+
+
+  mmu_init();
 
   __init(&scheduler);
 
@@ -96,5 +95,3 @@ void _main(void) {
     // }
   }
 }
-
-

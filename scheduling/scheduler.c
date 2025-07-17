@@ -216,8 +216,7 @@ void __exception_gateway(uint64_t reg_base) {
     __asm("MRS %[pstate], SPSR_EL3" : [pstate]"=r"(pstate):);
     __asm("MRS %[pstate], ELR_EL3" : [pstate]"=r"(elr):);
 
-
-    DEBUGH(pstate)
+    DEBUGB(pstate)
     DEBUGH(get_current_stack_pointer())
     DEBUGD(scheduler.current_task_index)
     DEBUGD((scheduler.current_task_index + 1) % MAX_TASK)

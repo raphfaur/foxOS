@@ -19,7 +19,6 @@ extern char _vbar_address;
 #define GICC_PMR 0x0004
 
 
-
 uint32_t get_periphbase() {
   uint64_t value;
   __asm volatile("mrs %[systemr], S3_1_C15_C3_0" : [systemr] "=r"(value) :);
@@ -104,6 +103,7 @@ uint64_t read_SCR_EL3() {
 void set_vbar(uint64_t value) {
   // value = value << 11;
   __asm volatile ("msr VBAR_EL3, %[value]" : : [value] "r"(value));
+  __asm volatile ("msr VBAR_EL1, %[value]" : : [value] "r"(value));
 }
 
 uint64_t read_vbar() {
