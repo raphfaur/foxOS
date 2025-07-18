@@ -11,8 +11,8 @@ void mmu_set_ttbr0(void *address)
 {
   uint64_t ttbr0 = (uint64_t)address;
   DEBUGH(ttbr0);
-  __asm volatile("MSR TTBR0_EL3, %[ttbr0]" : : [ttbr0] "r"(ttbr0));
-  __asm volatile("MRS %[ttbr0], TTBR0_EL3" : [ttbr0] "=r"(ttbr0) :);
+  __asm volatile("MSR TTBR0_EL1, %[ttbr0]" : : [ttbr0] "r"(ttbr0));
+  __asm volatile("MRS %[ttbr0], TTBR0_EL1" : [ttbr0] "=r"(ttbr0) :);
   DEBUGH(ttbr0);
 }
 
@@ -36,45 +36,30 @@ void mmu_set_mair()
 void mmu_set_tcr(union TCR_EL1 *tcr)
 {
   uint64_t reg = tcr->value;
-  __asm volatile("MSR TCR_EL3, %[reg] \n\t\
+  __asm volatile("MSR TCR_EL1, %[reg] \n\t\
       ISB \n\t\
   " : : [reg] "r"(reg));
-  __asm volatile("MRS %[reg], TCR_EL3" : [reg] "=r"(reg) :);
+  __asm volatile("MRS %[reg], TCR_EL1" : [reg] "=r"(reg) :);
   DEBUGB(reg);
 }
 
 void mmu_enable()
 {
   uint64_t SCTLR_EL1;
-  __asm volatile("MRS %[sctlr], SCTLR_EL3\n\t\
+  __asm volatile("MRS %[sctlr], SCTLR_EL1\n\t\
           ISB \n\t\
   " : [sctlr] "=r"(SCTLR_EL1) :);
 
   DEBUGB(SCTLR_EL1);
   SCTLR_EL1 |= 0x1ULL;
-  __asm volatile("MSR SCTLR_EL3, %[sctlr] \n\t\
-       TLBI ALLE3\n\t\
+  __asm volatile("MSR SCTLR_EL1, %[sctlr] \n\t\
+       TLBI VMALLE1\n\t\
+       DSB ISH \n\t\
        ISB \n\t\
       "
                  :
                  : [sctlr] "r"(SCTLR_EL1));
-}
-
-void mmu_tcr_init()
-{
-  union TCR_EL1 tcr;
-  // tcr.value = 0;
-  // tcr.field.
-  // 64 KiB granularity
-  tcr.field.TG0 = 0b01;
-  // // 1 MiB address space size ?
-  // tcr.field.PS = 0b010;
-
-  // tcr.field.PS = 0b010;
-  // tcr.field.T1SZ = 10;
-  tcr.field.T0SZ = 30;
-
-  mmu_set_tcr(&tcr);
+                 
 }
 
 void mmu_map_identity_4kb()
@@ -125,12 +110,12 @@ void mmu_map_identity_64kb(){
   DEBUG("Mapping identity with 64Kb granule")
 
   // Write table emtries
-  for (int i = 0; i < 3; i++)
+  for (int i = 0; i < 100; i++)
   {
     for (int j = 0; j < 8192; j++)
     {
       // A L3 table covers 512MB space and each block 64Kb
-      lv3_tables[i][j].block.addresss = 0x2000 * i + j;
+      lv3_tables[i][j].block.addresss = 0x2000 * i + j ;
       lv3_tables[i][j].block.AF = 0b01;
       lv3_tables[i][j].block.type = 0b11;
     }
@@ -142,13 +127,15 @@ void mmu_map_identity_64kb(){
   union TCR_EL1 tcr;
   tcr.field.TG0 = GRANULE_64K;
   // 34 bits address space (64 - 30 = 34)
-  tcr.field.T0SZ = 30;
+  tcr.field.T0SZ = 32;
   mmu_set_tcr(&tcr);
   
   // Set TTBR0 to point to lv2 table
   mmu_set_ttbr0((void *)&_lvl2_tbl);
 
 }
+
+
 // void set_index_physical_block(int index, void * block_address) {
 //   mmu_table(*l3_tables)[64] = (mmu_table(*)[64]) & _lvl3_tbl;
 //   union mmu_tte(*lvl2_tbl)[64] = (union mmu_tte(*)[64]) & _lvl2_tbl;
@@ -163,7 +150,7 @@ void mmu_map_identity_64kb(){
 
 void mmu_init()
 {
-  mmu_map_identity_4kb();
+  mmu_map_identity_64kb();
   mmu_enable();
   DEBUG("Enabled identity mapping")
 }

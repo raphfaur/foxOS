@@ -19,6 +19,32 @@ union TCR_EL1 {
   uint64_t value;
   struct __attribute__((packed)) {
     uint8_t T0SZ : 6;
+    uint8_t RESERVED : 1;
+    uint8_t EPD0 : 1;
+    uint8_t IRGN0 : 2;
+    uint8_t ORGN0 : 2;
+    uint8_t SH0 : 2;
+    uint8_t TG0 : 2;
+    uint8_t T1SZ : 21 - 16 + 1;
+    uint8_t A1 : 1;
+    uint8_t EPD1 : 1;
+    uint8_t IRGN1 : 2;
+    uint8_t ORGN1 : 2;
+    uint8_t SH1 : 2;
+    uint8_t TG1 : 2;
+    uint8_t IPS : 34 - 32 + 1;
+    uint8_t RESERVED : 1;
+    uint8_t AS : 1;
+    uint8_t TBI0 : 1;
+    uint8_t TBI1 : 1;
+    uint32_t RESERVED : 25;
+  } field;
+};
+
+union TCR_EL3 {
+  uint64_t value;
+  struct __attribute__((packed)) {
+    uint8_t T0SZ : 6;
     uint8_t RESERVED : 2;
     uint8_t IR0 : 2;
     uint8_t OR0 : 2;

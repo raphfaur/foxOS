@@ -13,20 +13,12 @@
 extern struct Scheduler scheduler;
 extern char _t1_stack;
 extern char _t2_stack;
+extern void enter_el1 (void);
+extern void bob (void);
 
 void t1_start() {
-  unsigned long long i = 0;
-  int a = 0;
-  uint64_t el;
-  // while (1) {
-  //   if (i == 10000) {
-  //     a++;
-  //     i = 0;
-  //     DEBUG("T1")
-  //     DEBUGD(a)
-  //   }
-  //   i++;
-  // }
+  DEBUG("Hey");
+  mmu_init();
 }
 
 void t2_start() {
@@ -59,6 +51,16 @@ struct Task T2 = {.pstate = 0,
 extern char _user_space_base;
 void _main(void) {
 
+
+
+  // DEBUG("Config done");
+
+  // syscall(2);
+  // set_timer(10000000);
+  // enable_timer_int();
+  // mmu_init();
+  enter_el1();
+
   struct gic_distributor gicd;
   struct gic_redistributor gicr;
   struct gic_cpu gicc;
@@ -67,20 +69,12 @@ void _main(void) {
   gic_redistributor_init(&gicr);
   gic_cpu_init(&gicc);
 
-  // DEBUG("Config done");
-
-  // syscall(2);
-
-
-
-
   mmu_init();
 
-  __init(&scheduler);
+  // __init(&scheduler);
 
-  register_task(&T1);
-  register_task(&T2);
-  __start(&scheduler);
+  // register_task(&T1);
+  // __start(&scheduler);
 
   while (1) {
     // unsigned int waker = ((uint32_t)current_system_timer_value());
@@ -94,4 +88,14 @@ void _main(void) {
 
     // }
   }
+}
+
+
+void _kernel_entry(){
+  uint8_t b = 0;
+  DEBUG("Yo")
+
+  mmu_init();
+  
+  while(1){}
 }

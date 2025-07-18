@@ -6,52 +6,30 @@ OBJ := ./obj
 
 ASFLAGS := -mcpu=cortex-a53
 CCFLAGS := -g -ggdb -c -mcpu=cortex-a53
-SRCS=$(wildcard *.c) $(wildcard drivers/*.c)  
+
+C_SRCS=$(shell find . -name '*.c')
+S_SRCS=$(shell find . -name '*.s')
+
+C_OBJS=$(C_SRCS:.c=.o)
+S_OBJS=$(S_SRCS:.s=.o)
+
+OBJS=$(C_OBJS) $(S_OBJS)
 
 all: main.bin
-$(OBJ)/%.o : drivers/gic/%.c
-	$(CC) $(CCFLAGS) -o $@ $^
 
-$(OBJ)/%.o : drivers/timer/%.c
-	$(CC) $(CCFLAGS) -o $@ $^
+$(C_OBJS): %.o: %.c
+	$(CC) -c $(CCFLAGS) $< -o $@
 
-$(OBJ)/%.o : drivers/uart/%.c
-	$(CC) $(CCFLAGS) -o $@ $^
+$(S_OBJS): %.o: %.s
+	$(CC) -c $(ASFLAGS) $< -o $@
 
-$(OBJ)/%.o : memory/%.c
-	$(CC) $(CCFLAGS) -o $@ $^
+debug: $(OBJS)
+	@echo $(OBJS)
 
-$(OBJ)/%.o : multicore/%.c
-	$(CC) $(CCFLAGS) -o $@ $^
+clean: $(OBJS)
+	rm $(OBJS)
 
-$(OBJ)/%.o : drivers/mmu/%.c
-	$(CC) $(CCFLAGS) -o $@ $^
-
-$(OBJ)/%.o : scheduling/%.c
-	$(CC) $(CCFLAGS) -o $@ $^
-
-$(OBJ)/%.o : isr/%.c
-	$(CC) $(CCFLAGS) -o $@ $^
-
-$(OBJ)/%.o : api/%.c
-	$(CC) $(CCFLAGS) -o $@ $^
-
-$(OBJ)/%.o : utils/debug.c
-	$(CC) $(CCFLAGS) -o $@ $^
-
-$(OBJ)/main.o : main.c 
-	$(CC) $(CCFLAGS) -o $@ $^
-
-$(OBJ)/startup.o : asm/startup.s
-	$(AS) $(ASFLAGS) -o $@ $^
-
-$(OBJ)/context_switcher.o : asm/context_switcher.s
-	$(AS) $(ASFLAGS) -o $@ $^
-
-$(OBJ)/exceptions.o : asm/exceptions.s
-	$(AS) $(ASFLAGS) -o $@ $^
-
-builds/main.elf : linker.ld $(OBJ)/cpu.o $(OBJ)/mmu.o $(OBJ)/syscall.o $(OBJ)/handler.o $(OBJ)/user_alloc.o $(OBJ)/allocator.o $(OBJ)/context_switcher.o $(OBJ)/core.o $(OBJ)/debug.o $(OBJ)/scheduler.o $(OBJ)/timer.o $(OBJ)/pl001.o $(OBJ)/main.o $(OBJ)/startup.o $(OBJ)/exceptions.o
+builds/main.elf : linker.ld $(OBJS)
 	$(CC) -specs=nosys.specs -T  $^ -o $@ -nostartfiles -lm -L /Applications/ArmGNUToolchain/13.3.rel1/aarch64-none-elf/lib/gcc/aarch64-none-elf/13.3.1 
 
 main.bin : builds/main.elf
