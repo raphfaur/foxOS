@@ -1,5 +1,5 @@
 #include "./allocator.h"
-#include "../utils/debug.h"
+#include "../../utils/debug.h"
 #include "math.h"
 
 #define BLOCK_FREE 0

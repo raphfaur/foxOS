@@ -1,15 +1,15 @@
-#include "./drivers/gic/gic.h"
-#include "./drivers/smmu/mmu.h"
-#include "./drivers/timer/timer.h"
+#include "../drivers/gic/gic.h"
+#include "../drivers/smmu/mmu.h"
+#include "../drivers/timer/timer.h"
 #include "./memory/allocator.h"
 #include "./memory/user_alloc.h"
-#include "./utils/debug.h"
-#include "api/syscall.h"
-#include "multicore/core.h"
+#include "../utils/debug.h"
+#include "../userspace/syscall.h"
+#include "../drivers/multicore/core.h"
 #include "scheduling/scheduler.h"
 #include "scheduling/tasks.h"
 #include "isr/handler.h"
-#include "utils/io.h"
+#include "../utils/io.h"
 #include <stdint.h>
 #include <string.h>
 
