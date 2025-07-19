@@ -9,7 +9,6 @@ void set_current_system_timer_value(unsigned int timer) {
   __asm volatile("msr CNTP_TVAL_EL0, %[systemr]" : : [systemr] "r"(reg));
 }
 
-
 unsigned int current_system_timer_value() {
   unsigned int time;
   uint64_t value;

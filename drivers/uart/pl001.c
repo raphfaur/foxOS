@@ -1,6 +1,14 @@
 #include "pl001.h"
+#include "../../utils/debug.h"
 
 struct serial UART = {.base_address = (const char *)0x9000000};
+
+
+#define UARTIMSC 0x038 
+#define UARTRIS 0x03C 
+#define UARTMIS 0x040
+#define UARTICR 0x044
+#define UARTCR
 
 extern char _heap_start1;
 extern char _heap_start2;
@@ -10,6 +18,16 @@ extern char _heap_start3;
 #define DEBUG_SPACE2 &_heap_start2
 #define DEBUG_SPACE3 &_heap_start3
 
+
+void pl011_init(){
+  *((volatile uint16_t *) (UART.base_address + UARTIMSC)) |= (1 << 4);
+}
+
+char pl011_read_char(struct serial *dev) {
+  volatile char *cursor = (volatile char *)dev->base_address;
+  return *cursor;
+}
+
 void pl011_send(struct serial *dev, const char *data) {
   char *data_cursor = (char *)data;
   volatile char *cursor = (volatile char *)dev->base_address;
@@ -17,6 +35,7 @@ void pl011_send(struct serial *dev, const char *data) {
     *cursor = *data_cursor;
     data_cursor++;
   }
+  *((volatile uint16_t *) (UART.base_address + UARTICR)) |= (1 << 5);
 }
 
 void pl011_send_int(struct serial *dev, const unsigned long long n, size_t digits, int base) {
@@ -30,3 +49,4 @@ void pl011_send_int(struct serial *dev, const unsigned long long n, size_t digit
   }
   pl011_send(dev, DEBUG_SPACE1);
 }
+

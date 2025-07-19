@@ -35,3 +35,5 @@ builds/main.elf : linker.ld $(OBJS)
 main.bin : builds/main.elf
 	$(OBJCPY) -O binary builds/main.elf builds/main.bin
 
+run: builds/main.elf
+	qemu-system-aarch64 -M virt,gic-version=3,virtualization=on,secure=on -cpu cortex-a53 -nographic -m 10G -gdb tcp::1234,nowait -kernel $^

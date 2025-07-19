@@ -1,4 +1,4 @@
-#include "./drivers/gic/cpu.h"
+#include "./drivers/gic/gic.h"
 #include "./drivers/smmu/mmu.h"
 #include "./drivers/timer/timer.h"
 #include "./memory/allocator.h"
@@ -8,13 +8,24 @@
 #include "multicore/core.h"
 #include "scheduling/scheduler.h"
 #include "scheduling/tasks.h"
+#include "isr/handler.h"
+#include "utils/io.h"
 #include <stdint.h>
+#include <string.h>
+
+
+const char * WELCOME_MSG = 
+  "\n\n\n"
+  "Welcome to FoxOS \n"
+  ">";
+
 
 extern struct Scheduler scheduler;
 extern char _t1_stack;
 extern char _t2_stack;
 extern void enter_el1 (void);
 extern void bob (void);
+extern struct serial UART;
 
 void t1_start() {
   DEBUG("Hey");
@@ -49,53 +60,54 @@ struct Task T2 = {.pstate = 0,
                   .stak_address = &_t2_stack};
 
 extern char _user_space_base;
+
 void _main(void) {
-
-
-
-  // DEBUG("Config done");
-
-  // syscall(2);
-  // set_timer(10000000);
-  // enable_timer_int();
-  // mmu_init();
   enter_el1();
-
-  struct gic_distributor gicd;
-  struct gic_redistributor gicr;
-  struct gic_cpu gicc;
-
-  gic_distributor_init(&gicd);
-  gic_redistributor_init(&gicr);
-  gic_cpu_init(&gicc);
-
-  mmu_init();
-
-  // __init(&scheduler);
-
-  // register_task(&T1);
-  // __start(&scheduler);
-
-  while (1) {
-    // unsigned int waker = ((uint32_t)current_system_timer_value());
-    // unsigned int ctl = get_timer_control_register();
-    // if ((int) waker > -1000000) {
-    //   DEBUGB(waker)
-    //   ctl = get_timer_control_register();
-    //   DEBUGB(ctl)
-    //   DEBUG("\n")
-    // } else {
-
-    // }
-  }
+  while (1) {}
 }
 
 
-void _kernel_entry(){
-  uint8_t b = 0;
-  DEBUG("Yo")
+void __timer_routine() {
+  static int i = 0;
+  DEBUG("Timer routine");
+  set_timer(100000000);
+}
 
-  mmu_init();
-  
-  while(1){}
+void __uart_routine(){
+  char received[2] = {0};
+  char c = pl011_read_char(&UART);
+  received[0] = c;
+  if (IO_CHAR_FLUSH == received[0]) {
+    received[0] = '\n';
+    pl011_send(&UART, received);
+    received[0] = '>';
+  }
+  _io_handle_input(c);
+  pl011_send(&UART, received);
+}
+
+void __io_handler(char * data, int data_length) {
+  if (memcmp(data, "bob", 3) == 0) {
+    set_timer(100000000);
+    enable_timer_int();
+  }
+}
+
+void _kernel_entry(){
+
+  io_register_flush_handler(__io_handler);
+  pl011_init();
+  // mmu_init();
+  _gic_init();
+
+  __register_routine_ppi(0xe, __timer_routine);
+  __register_routine_spi(0x1, __uart_routine);
+
+  // set_timer(1000000);
+  // enable_timer_int();
+  pl011_send(&UART, WELCOME_MSG);
+
+  while(1){
+
+  }
 }

@@ -1,6 +1,6 @@
 #include "./scheduler.h"
 #include "../drivers/timer/timer.h"
-#include "../drivers/gic/cpu.h"
+#include "../drivers/gic/gic.h"
 #include "../utils/debug.h"
 #include "./tasks.h"
 #include "string.h"
@@ -191,7 +191,7 @@ void _save_regs(uint64_t reg_base) {
 }
 
 void _schedule_next(unsigned int delay, uint64_t base_address) {
-    clear_gicc_interrupt();
+    // clear_gicc_interrupt();
     set_timer(delay);
     enable_timer_int();
     _store_reg_anx_ret(base_address);

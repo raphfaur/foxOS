@@ -1,5 +1,5 @@
 #include "core.h"
-#include "../drivers/gic/cpu.h"
+#include "../drivers/gic/gic.h"
 
 int core_id() {
   uint64_t id;
