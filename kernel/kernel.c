@@ -27,39 +27,39 @@ extern void bob (void);
 extern struct serial UART;
 extern void _kernel_setup();
 
-void t1_start() {
-  DEBUG("Hey");
-  mmu_init();
-}
+// void t1_start() {
+//   DEBUG("Hey");
+//   mmu_init();
+// }
 
-void t2_start() {
-  unsigned long long i = 0;
-  int a = 0;
-  uint64_t el;
-  // while (1) {
-  //   if (i == 10000) {
-  //     DEBUG("T2")
-  //     a++;
-  //     i = 0;
-  //     DEBUGD(a)
-  //   }
-  //   i++;
-  // }
-}
+// void t2_start() {
+//   unsigned long long i = 0;
+//   int a = 0;
+//   uint64_t el;
+//   // while (1) {
+//   //   if (i == 10000) {
+//   //     DEBUG("T2")
+//   //     a++;
+//   //     i = 0;
+//   //     DEBUGD(a)
+//   //   }
+//   //   i++;
+//   // }
+// }
 
-struct Task T1 = {.pstate = 0,
-                  .return_address = 0,
-                  .valid = 0,
-                  .run = t1_start,
-                  .stak_address = &_t1_stack};
+// struct Task T1 = {.pstate = 0,
+//                   .return_address = 0,
+//                   .valid = 0,
+//                   .run = t1_start,
+//                   .stak_address = &_t1_stack};
 
-struct Task T2 = {.pstate = 0,
-                  .return_address = 0,
-                  .valid = 0,
-                  .run = t2_start,
-                  .stak_address = &_t2_stack};
+// struct Task T2 = {.pstate = 0,
+//                   .return_address = 0,
+//                   .valid = 0,
+//                   .run = t2_start,
+//                   .stak_address = &_t2_stack};
 
-extern char _user_space_base;
+// extern char _user_space_base;
 extern void __kernel_entry ();
 
 void _main(void) {
@@ -89,7 +89,8 @@ void __uart_routine(){
 void __io_handler(char * data, int data_length) {
   if (memcmp(data, "alloc", 5) == 0) {
       int a = atoi(data + 6);
-      alloc(a);
+      void * address = kalloc(a);
+      DEBUGH((uint64_t) address);
   }
     if (memcmp(data, "init", 4) == 0) {
       init_allocator();

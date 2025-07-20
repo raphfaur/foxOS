@@ -54,6 +54,7 @@ void * process_alloc(int order, int process_id) {
     DEBUGH(index);
     DEBUGH(order);
     int block_n = pow(2, order);
+    // int block_n = 0;
     for (size_t i = 0; i < block_n; i++)
     {
         DEBUG("Adding block to process");
@@ -66,7 +67,7 @@ void process_dealloc(void *address, int process_id) {
     int order = free((void *) ( (uint64_t) address));
     DEBUGH(order);
     int index = ((uint64_t) address) / PAGE_SIZE;
-    int block_n = pow(2, order);
+    int block_n = 0;
     for (size_t i = 0; i < block_n; i++)
     {
         DEBUG("Removing block from process");

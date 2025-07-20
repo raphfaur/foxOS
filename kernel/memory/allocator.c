@@ -2,23 +2,11 @@
 #include "../utils/debug.h"
 #include "math.h"
 
-#define BLOCK_FREE 0
-#define BLOCK_ALLOCATED 1
-
-#define BLOCK_SPLITTED 0
-#define BLOCK_MERGED 1
-
-#define MAX_BLOCK_INDEX 31
-
-/* 2^(order + 1) - 1 */
-#define BLOCK_COUNT 31
-
-static block_t* allocated_blocks[MAX_BLOCK_INDEX];
-static struct address_w allocated_address[MAX_BLOCK_INDEX];
-static block_t blocks_pool[BLOCK_COUNT]; 
+static block_t* allocated_blocks[BLOCK_COUNT] = {(void *) 1};
+static struct address_w allocated_address[BLOCK_COUNT] = {(void * )1};
+static block_t blocks_pool[BLOCK_COUNT] = {1};
 
 static block_t root_block;
-
 
 
 /* BT helper */
@@ -94,7 +82,7 @@ block_t * _allocate_order(block_t *block, int order) {
 }
 
 int _save_address_block(void * address, block_t* block) {
-    for (size_t i = 0; i < MAX_BLOCK_INDEX; i++)
+    for (size_t i = 0; i < BLOCK_COUNT; i++)
     {
         if (allocated_address[i].valid == 0) {
             allocated_address[i].address = address;
@@ -107,7 +95,7 @@ int _save_address_block(void * address, block_t* block) {
 }
 
 block_t * _erase_address_block(void * address) {
-    for (size_t i = 0; i < MAX_BLOCK_INDEX; i++)
+    for (size_t i = 0; i < BLOCK_COUNT; i++)
     {
         if (allocated_address[i].address == address && allocated_address[i].valid == 1) {
             allocated_address[i].address = NULL;
@@ -128,8 +116,7 @@ void * alloc(int order) {
         return NULL;
     }
     int order_size = pow(2, order) * PAGE_SIZE;
-    void * address = (void *) (allocated_block->index * order_size);
-    DEBUGH((uint64_t)address);
+    void * address = ((void *) (allocated_block->index * order_size)) + (uint64_t) ALLOCATOR_BASE;
     /* Error, unexcpected behavior */
     if(_save_address_block(address, allocated_block) < 0){
         DEBUG("Could not save address")
@@ -176,3 +163,11 @@ void init_allocator() {
     populate_bt(&root_block, MAX_ORDER, 0, NULL);
 }
 
+void * kalloc(size_t size) {
+    int order = log2(ceil(size / PAGE_SIZE));
+    return alloc(order);
+}
+
+void kfree(void * address) {
+    free(address);
+}

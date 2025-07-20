@@ -1,7 +1,7 @@
 .global enter_el1
 
 el1_entry:
-    ldr x1, =_stack_top
+    ldr x1, =_bootloader_stack_top
     mov sp,x1
     B __kernel_jump 
 

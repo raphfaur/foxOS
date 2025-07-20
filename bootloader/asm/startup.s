@@ -2,7 +2,7 @@
 .global _firm_mmu_init
 
 _Startup:
-  ldr x1, =_stack_top
+  ldr x1, =_bootloader_stack_top
   mov sp,x1
   B __firmware_entry
 

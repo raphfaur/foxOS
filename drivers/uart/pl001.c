@@ -10,11 +10,11 @@ struct serial UART = {.base_address = (const char *)0x9000000};
 #define UARTICR 0x044
 #define UARTCR
 
-extern char _heap_start1;
+extern char _debug_heap;
 extern char _heap_start2;
 extern char _heap_start3;
 
-#define DEBUG_SPACE1 &_heap_start1
+#define DEBUG_SPACE1 &_debug_heap
 #define DEBUG_SPACE2 &_heap_start2
 #define DEBUG_SPACE3 &_heap_start3
 
@@ -44,7 +44,12 @@ void pl011_send_int(struct serial *dev, const unsigned long long n, size_t digit
   for (int i=1; i<=digits; i++) {
     int r = q % base;
     q /= base;
-    char c = (char) r + '0';
+    char c;
+    if (r >= 10) {
+      c = (char) (r - 10) + 'a';
+    } else {
+      c = (char) r + '0';
+    }
     *(DEBUG_SPACE1 + digits - i) = c;
   }
   pl011_send(dev, DEBUG_SPACE1);
