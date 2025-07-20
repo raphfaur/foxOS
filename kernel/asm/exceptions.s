@@ -1,4 +1,4 @@
-.section .text.exceptions
+.section .text.exceptions,"ax"
 .extern __exception_gateway
 
 .global __fiq_bridge

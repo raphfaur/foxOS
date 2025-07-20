@@ -315,3 +315,4 @@ union mmu_tte_64k_lv3 {
 
 
 void mmu_set_tcr(union TCR_EL1 *tcr);
+void mmu_init();

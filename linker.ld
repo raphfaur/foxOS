@@ -4,33 +4,27 @@ MEMORY {
   bootloader : ORIGIN = 0x40000000, LENGTH = 5M
   heap : ORIGIN = ORIGIN(bootloader) + LENGTH(bootloader), LENGTH = 10M
   vectors : ORIGIN = ORIGIN(heap) + LENGTH(heap), LENGTH = 0x1000
-  kernel_mmu : ORIGIN = ORIGIN(vectors) + LENGTH(vectors), LENGTH = 1500M 
-  kernel_code : ORIGIN = ORIGIN(kernel_mmu) + LENGTH(kernel_mmu), LENGTH = 10M 
+  mmu : ORIGIN = ORIGIN(vectors) + LENGTH(vectors), LENGTH = 1500M 
+  kernel_code : ORIGIN = 0xffffffff00000000, LENGTH = 10M 
+  debug_region : ORIGIN = 0, LENGTH = 0x0
 }
 
 ENTRY(_Startup)
 SECTIONS {
+
   # Firmware code
   .startup : AT(0x40000000) {
     */startup.o(.text)
   } > bootloader
 
-  .text : {
-    *(.text)
+  .firm : AT(ADDR(.firm)){
+    *(EXCLUDE_FILE(*/kernel.o) .text .bss .data .rodata ) 
   } > bootloader
 
-  .data : {
-    *(.data)
-  } > bootloader
-
-  .rodata : {
-    
-    *(.rodata)
-  } > bootloader
-
-  .bdd : {
-    *(.bss COMMON)
-  } > bootloader
+  .kernel : AT(ALIGN(LOADADDR(.firm) + SIZEOF(.firm), 4K)) {
+    */kernel.o(.*)
+  } > kernel_code
+  _kernel_base_address = LOADADDR(.kernel);
 
   .vbar : ALIGN(0x100)
   {
@@ -38,22 +32,40 @@ SECTIONS {
     */exceptions.o(.text.exceptions)
   } > vectors
 
+
+  # Userspace MMU 
+  .u_lvl1_tbl : ALIGN(0x10000)  
+  {
+    _ulvl1_tbl = . ;
+    . = . + 8 * 8;
+  } > mmu
+  .u_lv2_tbl : ALIGN(0x10000)
+  {
+    _ulvl2_tbl = .;
+    . = . + 8 * 512 * 8;
+  } > mmu
+  .u_lv3_tbl : ALIGN(0x10000)
+  {
+    _ulvl3_tbl = .;
+    . = . + 8 * 512 * 512 * 8;
+  } > mmu
+
   # Kernel MMU 
   .k_lvl1_tbl : ALIGN(0x10000)  
   {
-    _lvl1_tbl = . ;
-    . = . + 512 * 8;
-  } > kernel_mmu
+    _klvl1_tbl = . ;
+    . = . + 8 * 8;
+  } > mmu
   .k_lv2_tbl : ALIGN(0x10000)
   {
-    _lvl2_tbl = .;
-    . = . + 512 * 512 * 8;
-  } > kernel_mmu
+    _klvl2_tbl = .;
+    . = . + 8 * 512 * 8;
+  } > mmu
   .k_lv3_tbl : ALIGN(0x10000)
   {
-    _lvl3_tbl = .;
-    . = . + 512 * 512 * 512 * 8;
-  } > kernel_mmu
+    _klvl3_tbl = .;
+    . = . + 8 * 512 * 512 * 8;
+  } > mmu
 
   .mem : ALIGN(8) {
     _heap_start = .;

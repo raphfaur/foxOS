@@ -1,4 +1,4 @@
-.section .text.context_switcher
+.section .text.context_switcher, "ax"
 
 .global _switcher_entry
 .global __fiq_bridge

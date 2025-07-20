@@ -1,10 +1,9 @@
 .global enter_el1
-.global bob
 
 el1_entry:
     ldr x1, =_stack_top
     mov sp,x1
-    BL _kernel_entry
+    B __kernel_jump 
 
 enter_el1:
 
@@ -21,7 +20,7 @@ enter_el1:
 
 
     LDR      x0, =el1_entry
-    MOV      x1, #0b0101
+    MOV      x1, #0b0101 // Secure EL1
     MSR      ELR_EL3, x0 // where to branch to when exception completes
     MSR      SPSR_EL3, x1 // set the program state for this point to a known value
     

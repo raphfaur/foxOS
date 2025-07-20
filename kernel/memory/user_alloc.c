@@ -1,7 +1,7 @@
 #include "./user_alloc.h"
 #include "./allocator.h"
 #include <math.h>
-#include "../../utils/debug.h"
+#include "../utils/debug.h"
 
 struct process_block block_pool[BLOCK_N];
 struct process_block process_pool[MAX_PROCESS_MEMORY_SPACE_N];

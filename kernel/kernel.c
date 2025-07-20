@@ -3,13 +3,13 @@
 #include "../drivers/timer/timer.h"
 #include "./memory/allocator.h"
 #include "./memory/user_alloc.h"
-#include "../utils/debug.h"
 #include "../userspace/syscall.h"
 #include "../drivers/multicore/core.h"
 #include "scheduling/scheduler.h"
 #include "scheduling/tasks.h"
 #include "isr/handler.h"
-#include "../utils/io.h"
+#include "utils/io.h"
+#include "utils/debug.h"
 #include <stdint.h>
 #include <string.h>
 
@@ -60,12 +60,12 @@ struct Task T2 = {.pstate = 0,
                   .stak_address = &_t2_stack};
 
 extern char _user_space_base;
+extern void __kernel_entry ();
 
 void _main(void) {
   enter_el1();
   while (1) {}
 }
-
 
 void __timer_routine() {
   static int i = 0;
@@ -93,21 +93,19 @@ void __io_handler(char * data, int data_length) {
   }
 }
 
-void _kernel_entry(){
+void __kernel_entry(){
 
   io_register_flush_handler(__io_handler);
   pl011_init();
-  // mmu_init();
+  mmu_init();
   _gic_init();
 
   __register_routine_ppi(0xe, __timer_routine);
   __register_routine_spi(0x1, __uart_routine);
 
-  // set_timer(1000000);
-  // enable_timer_int();
   pl011_send(&UART, WELCOME_MSG);
 
   while(1){
-
+    
   }
 }

@@ -1,11 +1,38 @@
-CC := aarch64-none-elf-gcc
-LD := aarch64-none-elf-ld
+CC := clang
+LD := clang
 AS := aarch64-none-elf-as
-OBJCPY := aarch64-none-elf-objcopy
+# OBJCPY := aarch64-none-elf-objcopy
 OBJ := ./obj
 
-ASFLAGS := -mcpu=cortex-a53
-CCFLAGS := -g -ggdb -c -mcpu=cortex-a53
+ASFLAGS := \
+	--sysroot=/Applications/ArmGNUToolchain/13.3.rel1/aarch64-none-elf/aarch64-none-elf \
+	--target=aarch64-none-elf \
+	-mcpu=cortex-a53 \
+
+CCFLAGS := \
+	--sysroot=/Applications/ArmGNUToolchain/13.3.rel1/aarch64-none-elf/aarch64-none-elf \
+	--target=aarch64-none-elf \
+	-g \
+	-O0 \
+	-c \
+	-mcpu=cortex-a53 \
+	-fdebug-types-section \
+	-mcmodel=large \
+	-gdwarf64 \
+
+LDFLAGS := \
+	--sysroot=/Applications/ArmGNUToolchain/13.3.rel1/aarch64-none-elf/aarch64-none-elf \
+	--target=aarch64-none-elf \
+	-mcpu=cortex-a53 \
+	-nostdlib \
+	-fdebug-types-section \
+	-mcmodel=large \
+	-O0 \
+	-g \
+	-O0 \
+	-gdwarf64 \
+
+	
 
 C_SRCS=$(shell find . -name '*.c')
 S_SRCS=$(shell find . -name '*.s')
@@ -15,7 +42,10 @@ S_OBJS=$(S_SRCS:.s=.o)
 
 OBJS=$(C_OBJS) $(S_OBJS)
 
-all: main.bin
+
+all: builds/main.elf
+
+
 
 $(C_OBJS): %.o: %.c
 	$(CC) -c $(CCFLAGS) $< -o $@
@@ -29,11 +59,11 @@ debug: $(OBJS)
 clean: $(OBJS)
 	rm $(OBJS)
 
-builds/main.elf : linker.ld $(OBJS)
-	$(CC) -specs=nosys.specs -T  $^ -o $@ -nostartfiles -lm -L /Applications/ArmGNUToolchain/13.3.rel1/aarch64-none-elf/lib/gcc/aarch64-none-elf/13.3.1 
+builds/main.elf : $(OBJS)
+	$(LD) $(LDFLAGS) $^ -o $@ -T linker.ld -lm -L/Applications/ArmGNUToolchain/13.3.rel1/aarch64-none-elf/aarch64-none-elf/lib -ffreestanding -fno-builtin
 
-main.bin : builds/main.elf
-	$(OBJCPY) -O binary builds/main.elf builds/main.bin
+# main.bin : builds/main.elf
+# 	$(OBJCPY) -O binary builds/main.elf builds/main.bin
 
 run: builds/main.elf
 	qemu-system-aarch64 -M virt,gic-version=3,virtualization=on,secure=on -cpu cortex-a53 -nographic -m 10G -gdb tcp::1234,nowait -kernel $^

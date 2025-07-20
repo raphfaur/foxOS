@@ -1,5 +1,5 @@
 #include "../../drivers/gic/gic.h"
-#include "../../utils/debug.h"
+#include "../utils/debug.h"
 #include "handler.h"
 
 /*

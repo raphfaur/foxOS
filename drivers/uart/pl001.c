@@ -1,5 +1,5 @@
 #include "pl001.h"
-#include "../../utils/debug.h"
+#include "../../kernel/utils/debug.h"
 
 struct serial UART = {.base_address = (const char *)0x9000000};
 
