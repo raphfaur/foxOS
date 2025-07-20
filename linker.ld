@@ -6,11 +6,13 @@ MEMORY {
   vectors : ORIGIN = ORIGIN(heap) + LENGTH(heap), LENGTH = 0x1000
   mmu : ORIGIN = ORIGIN(vectors) + LENGTH(vectors), LENGTH = 50M 
   kernel_code : ORIGIN = 0xffffffff00000000, LENGTH = 10M 
+  debug_info : ORIGIN = 0x0, LENGTH = 0x0
 }
 
 ENTRY(_Startup)
 
 SECTIONS {
+
   .startup : AT(0x40000000) {
     */startup.o
     bootloader/*.o(*)
@@ -23,10 +25,14 @@ SECTIONS {
   } > vectors
 
   .kernel : AT(ALIGN(LOADADDR(.startup) + SIZEOF(.startup), 4K)) {
-    kernel/*.o(.*)
-    drivers/*.o(*)
-    *(.rodata* .text*)
+    kernel/*.o(.text* .data* .rodata* .bss*)
+    drivers/*.o(.text* .data* .rodata* .bss*)
+    *(.text*)
+    *(.rodata*)
+    *(.data*)
+    *(.bss*)
   } > kernel_code
+
   _kernel_base_address = LOADADDR(.kernel);
 
   .user_mmu : ALIGN(0x10000) {

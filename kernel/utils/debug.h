@@ -32,4 +32,6 @@ pl011_send(&UART, value "\n");
 
 uint64_t get_current_stack_pointer() ;
 
+int atoi(char *);
+
 #endif 

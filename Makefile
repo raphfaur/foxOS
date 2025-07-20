@@ -12,11 +12,8 @@ ASFLAGS := \
 CCFLAGS := \
 	--sysroot=/Applications/ArmGNUToolchain/13.3.rel1/aarch64-none-elf/aarch64-none-elf \
 	--target=aarch64-none-elf \
-	-g \
-	-O0 \
 	-c \
 	-mcpu=cortex-a53 \
-	-fdebug-types-section \
 	-mcmodel=large \
 	-gdwarf64 \
 
@@ -27,8 +24,6 @@ LDFLAGS := \
 	-nostdlib \
 	-fdebug-types-section \
 	-mcmodel=large \
-	-O0 \
-	-g \
 	-O0 \
 	-gdwarf64 \
 

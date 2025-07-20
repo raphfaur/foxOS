@@ -1,7 +1,7 @@
 #include "../drivers/mmu/mmu.h"
 
 extern void enter_el1();
-extern void __kernel_entry();
+extern void __kernel_setup();
 extern void _firm_mmu_init();
 
 extern void _firm_map_kernel_4kb();
@@ -16,6 +16,6 @@ void __kernel_jump() {
     _firm_map_kernel_4kb();
     _firm_map_userspace_4kb();
     _firm_mmu_init();
-    __kernel_entry();
+    __kernel_setup();
 }
 

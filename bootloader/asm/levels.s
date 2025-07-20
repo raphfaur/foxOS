@@ -23,5 +23,6 @@ enter_el1:
     MOV      x1, #0b0101 // Secure EL1
     MSR      ELR_EL3, x0 // where to branch to when exception completes
     MSR      SPSR_EL3, x1 // set the program state for this point to a known value
+
     
     ERET

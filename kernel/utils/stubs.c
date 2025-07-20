@@ -25,3 +25,5 @@ int __errno_var;
 int *__errno(void) {
     return &__errno_var;
 }
+
+

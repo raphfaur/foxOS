@@ -13,7 +13,6 @@
 #include <stdint.h>
 #include <string.h>
 
-
 const char * WELCOME_MSG = 
   "\n\n\n"
   "Welcome to FoxOS \n"
@@ -26,6 +25,7 @@ extern char _t2_stack;
 extern void enter_el1 (void);
 extern void bob (void);
 extern struct serial UART;
+extern void _kernel_setup();
 
 void t1_start() {
   DEBUG("Hey");
@@ -87,14 +87,16 @@ void __uart_routine(){
 }
 
 void __io_handler(char * data, int data_length) {
-  if (memcmp(data, "bob", 3) == 0) {
-    set_timer(100000000);
-    enable_timer_int();
+  if (memcmp(data, "alloc", 5) == 0) {
+      int a = atoi(data + 6);
+      alloc(a);
+  }
+    if (memcmp(data, "init", 4) == 0) {
+      init_allocator();
   }
 }
 
 void __kernel_entry(){
-
   io_register_flush_handler(__io_handler);
   pl011_init();
   _gic_init();
@@ -103,6 +105,7 @@ void __kernel_entry(){
   __register_routine_spi(0x1, __uart_routine);
 
   pl011_send(&UART, WELCOME_MSG);
+  init_allocator();
 
   while(1){
     
