@@ -97,7 +97,6 @@ void __kernel_entry(){
 
   io_register_flush_handler(__io_handler);
   pl011_init();
-  mmu_init();
   _gic_init();
 
   __register_routine_ppi(0xe, __timer_routine);

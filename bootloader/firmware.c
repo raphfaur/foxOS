@@ -2,6 +2,10 @@
 
 extern void enter_el1();
 extern void __kernel_entry();
+extern void _firm_mmu_init();
+
+extern void _firm_map_kernel_4kb();
+extern void _firm_map_userspace_4kb();
 
 /* The firware configures the MMU for EL1 Secure and jumps to kernel at 0xffffffff00000000 */
 void __firmware_entry() {
@@ -9,7 +13,9 @@ void __firmware_entry() {
 }
 
 void __kernel_jump() {
-    mmu_init();
+    _firm_map_kernel_4kb();
+    _firm_map_userspace_4kb();
+    _firm_mmu_init();
     __kernel_entry();
 }
 
