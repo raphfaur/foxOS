@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <stddef.h>
 
 #define CONCAT(x, y) x##y
 #define EXPAND(x, y) CONCAT(x, y)
@@ -313,6 +314,22 @@ union mmu_tte_64k_lv3 {
   uint64_t raw;
 };
 
+#define PAGE_SIZE (0x1000)
+#define PAGE_BIT_N (12)
+#define PAGE_MASK (PAGE_SIZE - 1)
+
+typedef enum _mmu_res {
+  MMU_RES_SUCCESS = 0,
+  MMU_RES_INVALID_ADD
+} _mmu_res_e;
+
+/* 
+Given a physical page index phy_page, maps page_n pages of kernel memory to page_n pages of physical memory
+starting at vir_addr_base kernel address
+*/
+_mmu_res_e _kmap_page_addr_n(size_t phy_page, size_t page_n, void * vir_addr_base);
+_mmu_res_e _kmap_addr_addr_n(void * phy_add, size_t page_n, void * vir_add);
+_mmu_res_e _kmap_addr_addr(void * phy_add, void * vir_add);
 
 void mmu_set_tcr(union TCR_EL1 *tcr);
 void mmu_init();

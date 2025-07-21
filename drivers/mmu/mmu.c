@@ -10,7 +10,10 @@ extern char _klvl1_tbl;
 extern char _klvl2_tbl;
 extern char _klvl3_tbl;
 
-extern char _user_space_base;
+union mmu_tte_4k_lv1 *lv1_table = (union mmu_tte_4k_lv1 *)&_klvl1_tbl;
+union mmu_tte_4k_lv2 (*lv2_table) [512] = (union mmu_tte_4k_lv2 (*) [] )&_klvl2_tbl;
+union mmu_tte_4k_lv3 (*lv3_tables)[512][512] = (union mmu_tte_4k_lv3 (*) [] )& _klvl3_tbl;
+
 
 void mmu_set_ttbr0(void *address)
 {
@@ -72,134 +75,42 @@ void mmu_enable()
 
 extern char _kernel_base_address;
 
-void map_kernel_4kb() {
-  union mmu_tte_4k_lv1 *lv1_table = (union mmu_tte_4k_lv1 *)&_klvl1_tbl;
-  union mmu_tte_4k_lv2 (*lv2_table) [512] = (union mmu_tte_4k_lv2 (*) [] )&_klvl2_tbl;
-  union mmu_tte_4k_lv3 (*lv3_tables)[512][512] = (union mmu_tte_4k_lv3 (*) [] )& _klvl3_tbl;
+void _mmu_kflush() {
+  __asm volatile ("TLBI VMALLE1 \n\t\
+    DSB ISH \n\t\
+    ISB \n\t\
+  ");
+}
 
-  DEBUGH((uint64_t) &_kernel_base_address >> 12);
-  // Write table emtries
-  for (int lv1 = 0; lv1 < 8; lv1++)
-  {
-    for (int lv2 = 0; lv2 < 512; lv2++)
-    {
-      for (int lv3 = 0; lv3 < 512; lv3++)
-      {
-        // A L3 table covers 2MB space and each block 4Kb
-        lv3_tables[lv1][lv2][lv3].block.addresss = 512 * 512 * lv1 + 512 * lv2 + lv3 + ((uint64_t) &_kernel_base_address >> 12);
-        lv3_tables[lv1][lv2][lv3].block.AF = 0b01;
-        lv3_tables[lv1][lv2][lv3].block.type = 0b11;
-      }
-      lv2_table[lv1][lv2].table.addresss = (uint64_t) &lv3_tables[lv1][lv2] >> 12;
-      lv2_table[lv1][lv2].table.type = 0b11;
-    }
-    lv1_table[lv1].table.addresss = (uint64_t) &lv2_table[lv1] >> 12;
-    lv1_table[lv1].table.type = 0b11;
+/* 
+Given a physical page index phy_page, maps page_n pages of kernel memory to page_n pages of physical memory
+starting at vir_addr_base kernel address
+*/
+_mmu_res_e _kmap_page_addr_n(size_t phy_page, size_t page_n, void * vir_addr_base) {
+  size_t vir_page = (size_t) vir_addr_base >> PAGE_BIT_N;
+  for (size_t p = vir_page; p < vir_page + page_n; p++) {
+    int lv1 = p >> 18;
+    int lv2 = p >> 9 & 0b111111111;
+    int lv3 = p & 0b111111111;
+    lv3_tables[lv1][lv2][lv3].block.addresss = phy_page + p - vir_page;
+    lv3_tables[lv1][lv2][lv3].block.AF = 0b01;
+    lv3_tables[lv1][lv2][lv3].block.type = 0b11;
   }
+  _mmu_kflush();
+  return MMU_RES_SUCCESS;
 }
 
-void map_userspace_4kb(){
-  union mmu_tte_4k_lv1 *lv1_table = (union mmu_tte_4k_lv1 *)&_ulvl1_tbl;
-  union mmu_tte_4k_lv2 (*lv2_table) [512] = (union mmu_tte_4k_lv2 (*) [] )&_ulvl2_tbl;
-  union mmu_tte_4k_lv3 (*lv3_tables)[512][512] = (union mmu_tte_4k_lv3 (*) [] )& _ulvl3_tbl;
-
-  DEBUG("Mapping identity with 4Kb granule")
-
-  // Write table emtries
-  for (int lv1 = 0; lv1 < 8; lv1++)
-  {
-    for (int lv2 = 0; lv2 < 512; lv2++)
-    {
-      for (int lv3 = 0; lv3 < 512; lv3++)
-      {
-        // A L3 table covers 2MB space and each block 4Kb
-        lv3_tables[lv1][lv2][lv3].block.addresss = 512 * 512 * lv1 + 512 * lv2 + lv3;
-        lv3_tables[lv1][lv2][lv3].block.AF = 0b01;
-        lv3_tables[lv1][lv2][lv3].block.type = 0b11;
-      }
-      lv2_table[lv1][lv2].table.addresss = (uint64_t) &lv3_tables[lv1][lv2] >> 12;
-      lv2_table[lv1][lv2].table.type = 0b11;
-    }
-    lv1_table[lv1].table.addresss = (uint64_t) &lv2_table[lv1] >> 12;
-    lv1_table[lv1].table.type = 0b11;
-  }
+_mmu_res_e _kmap_addr_addr_n(void * phy_add, size_t page_n, void * vir_add) {
+  if ( (size_t) phy_add & PAGE_MASK | (size_t) vir_add & PAGE_MASK ) return MMU_RES_INVALID_ADD;
+  size_t page = (uint64_t) phy_add >> PAGE_BIT_N;
+  return _kmap_page_addr_n(page, page_n, vir_add);
 }
 
-void mmu_map_identity_4kb()
-{
-  DEBUG("Done writing")
-
-  map_userspace_4kb();
-  map_kernel_4kb();
-
-
-  // Set TCR
-  union TCR_EL1 tcr;
-  tcr.field.TG1 = GRANULE_4K;
-  tcr.field.TG0 = GRANULE_4K;
-  // 38 bits address space (64 - 26 = 38)
-  tcr.field.T0SZ = 32;
-  tcr.field.T1SZ = 32;
-  tcr.field.IPS = 0b001;
-  mmu_set_tcr(&tcr);
-  
-  // Set TTBR0 to point to lv1 table
-  mmu_set_ttbr0((void *)&_ulvl1_tbl);
-  DEBUGH((uint64_t) &_ulvl1_tbl);
-  DEBUGH((uint64_t) &_klvl1_tbl);
-  
-  mmu_set_ttbr1((void *)&_klvl1_tbl);
-
+_mmu_res_e _kmap_addr_addr(void * phy_add, void * vir_add) {
+  return _kmap_addr_addr_n(phy_add, 1, vir_add);
 }
-
-void mmu_map_identity_64kb(){
-  union mmu_tte_64k_lv2 *lv2_table = (union mmu_tte_64k_lv2 *)&_ulvl2_tbl;
-  union mmu_tte_64k_lv3(*lv3_tables)[8192] = (union mmu_tte_64k_lv3(*)[]) & _ulvl3_tbl;
-
-  DEBUG("Mapping identity with 64Kb granule")
-
-  // Write table emtries
-  for (int i = 0; i < 100; i++)
-  {
-    for (int j = 0; j < 8192; j++)
-    {
-      // A L3 table covers 512MB space and each block 64Kb
-      lv3_tables[i][j].block.addresss = 0x2000 * i + j ;
-      lv3_tables[i][j].block.AF = 0b01;
-      lv3_tables[i][j].block.type = 0b11;
-    }
-    lv2_table[i].table.addresss = (uint64_t)&lv3_tables[i] >> 16;
-    lv2_table[i].table.type = 0b11;
-  }
-
-  // Set TCR
-  union TCR_EL1 tcr;
-  tcr.field.TG0 = GRANULE_64K;
-  // 34 bits address space (64 - 30 = 34)
-  tcr.field.T0SZ = 32;
-  mmu_set_tcr(&tcr);
-  
-  // Set TTBR0 to point to lv2 table
-  mmu_set_ttbr0((void *)&_ulvl2_tbl);
-
-}
-
-
-// void set_index_physical_block(int index, void * block_address) {
-//   mmu_table(*l3_tables)[64] = (mmu_table(*)[64]) & _ulvl3_tbl;
-//   union mmu_tte(*ulvl2_tbl)[64] = (union mmu_tte(*)[64]) & _ulvl2_tbl;
-
-//   int i = index / 8192;
-//   int j = index % 8192;
-
-//   (*l3_tables)[i][j].block.addresss = (uint64_t) block_address >> 15;
-//   (*l3_tables)[i][j].block.AF = 0b01;
-//   (*l3_tables)[i][j].block.type = 0b01;
-// };
 
 void mmu_init()
 {
-  mmu_map_identity_4kb();
   mmu_enable();
-  DEBUG("Enabled identity mapping")
 }
