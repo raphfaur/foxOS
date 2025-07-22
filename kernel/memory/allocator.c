@@ -2,13 +2,11 @@
 #include "../utils/debug.h"
 #include "math.h"
 
-static block_t* allocated_blocks[BLOCK_COUNT] = {(void *) 1};
-static struct address_w allocated_address[BLOCK_COUNT] = {(void * )1};
-static block_t blocks_pool[BLOCK_COUNT] = {1};
+static block_t* allocated_blocks[BLOCK_COUNT];
+static struct address_w allocated_address[BLOCK_COUNT];
+static block_t blocks_pool[BLOCK_COUNT];
 
 static block_t root_block;
-
-
 /* BT helper */
 void _set_all_children_allocated(block_t *block, int allocated) {
     block->allocated = allocated;
@@ -109,6 +107,8 @@ block_t * _erase_address_block(void * address) {
 }
 
 void * alloc(int order) {
+    DEBUG("Allocating")
+    DEBUGD(order)
     block_t * allocated_block = _allocate_order(&root_block, order);
     if (allocated_block == NULL)
     {
@@ -125,17 +125,17 @@ void * alloc(int order) {
     return address;
 }
 
-int free(void * address) {
-    DEBUG("Erasing block")
-    block_t * block = _erase_address_block(address);
-    DEBUGH(block->order);
-    if (block != NULL)
-    {
-        DEBUG("Freeing block")
-        _free_block(block);
-    }
-    return block->order;
-}
+// int free(void * address) {
+//     DEBUG("Erasing block")
+//     block_t * block = _erase_address_block(address);
+//     DEBUGH(block->order);
+//     if (block != NULL)
+//     {
+//         DEBUG("Freeing block")
+//         _free_block(block);
+//     }
+//     return block->order;
+// }
 
 void populate_bt(block_t * block, int order, int index, block_t * parent) {
     block->order = order;
@@ -157,6 +157,7 @@ void populate_bt(block_t * block, int order, int index, block_t * parent) {
 }
 
 void init_allocator() {
+    DEBUGH((uint64_t) ALLOCATOR_BASE)
     root_block = blocks_pool[0];
     root_block.order = MAX_ORDER;
     root_block.index = 0;
@@ -169,5 +170,5 @@ void * kalloc(size_t size) {
 }
 
 void kfree(void * address) {
-    free(address);
+    // free(address);
 }

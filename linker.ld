@@ -37,6 +37,7 @@ SECTIONS {
     *(.rodata*)
     *(.data*)
     *(.bss*)
+    *(.eh_frame*)
   } > kernel_code
   _kernel_base_address = LOADADDR(.kernel);
 

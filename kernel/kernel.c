@@ -1,5 +1,5 @@
 #include "../drivers/gic/gic.h"
-#include "../drivers/smmu/mmu.h"
+#include "../drivers/mmu/mmu.h"
 #include "../drivers/timer/timer.h"
 #include "./memory/allocator.h"
 #include "./memory/user_alloc.h"
@@ -10,6 +10,7 @@
 #include "isr/handler.h"
 #include "utils/io.h"
 #include "utils/debug.h"
+#include "kcpp/test.h"
 #include <stdint.h>
 #include <string.h>
 
@@ -97,6 +98,10 @@ void __io_handler(char * data, int data_length) {
   }
 }
 
+
+extern char _kernel_base_address;
+extern char _kernel_memory_physical;
+
 void __kernel_entry(){
   io_register_flush_handler(__io_handler);
   pl011_init();
@@ -107,7 +112,20 @@ void __kernel_entry(){
 
   pl011_send(&UART, WELCOME_MSG);
   init_allocator();
+  DEBUGH((uint64_t) &_kernel_memory_physical)
+  DEBUGH((uint64_t) &_kernel_base_address)
 
+
+  // DEBUG("Test")
+  // uint64_t * a = (uint64_t * ) 0x0000000041f50000;
+  // * a =0;
+  // int b = _kmap_addr_addr_n(&_kernel_base_address, 0x4000, (void *) 0x0);
+  // void * a = phy_to_virt((void *) 0xffffffff);
+  // DEBUGH((uint64_t) a);
+
+  
+  int res = test();
+  DEBUGD(res)
   while(1){
     
   }
